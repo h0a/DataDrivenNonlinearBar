@@ -1,6 +1,7 @@
 using Test
 
 tests = [
+            "base"
         ]
 
 @testset "DataDrivenNonlinearBar Unit-testing" begin
