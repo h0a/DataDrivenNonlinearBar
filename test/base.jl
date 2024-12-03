@@ -29,3 +29,16 @@ using DataDrivenNonlinearBar
     xx = LinRange(-1,1,10)
     @test L.(xx) == ones(length(xx))
 end
+
+
+@testset "Gauss-Legendre quadrature rule" begin    
+    x, w = GaussLegendreQuadRule()
+
+    @test x ≈ [-1/sqrt(3); 1/sqrt(3)]
+    @test w ≈ [1;1]
+
+    x, w = GaussLegendreQuadRule(interval=[0,1], numQuadPts=3)
+
+    @test sum(w) ≈ 1.0
+    @test x ≈ [0.5*(1-sqrt(3/5)); 0.5; 0.5*(1+sqrt(3/5))]
+end

@@ -1,6 +1,6 @@
 module DataDrivenNonlinearBar
 
-using LinearAlgebra, SparseArrays, StaticArrays
+using LinearAlgebra, SparseArrays, StaticArrays, GaussQuadrature
 
 include("base.jl")
 # include("assemble.jl")
