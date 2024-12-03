@@ -1,0 +1,10 @@
+name = "DataDrivenNonlinearBar"
+uuid = "04c08520-a27b-4d17-8b11-9730ce58a77d"
+authors = ["Hoa Nguyen <nguyenhoa18121993@gmail.com>"]
+version = "0.1.0"
+
+[deps]
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
