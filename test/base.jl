@@ -28,6 +28,13 @@ using DataDrivenNonlinearBar
     L = constantFunctions()
     xx = LinRange(-1,1,10)
     @test L.(xx) == ones(length(xx))
+
+    # basis function matrix
+    N_matrix, dN_matrix = constructBasisFunctionMatrixLinearLagrange(evalPts=xx)
+    R_matrix = constructBasisFunctionMatrixConstantFuncs(evalPts=xx)
+
+    @test size(N_matrix) == size(dN_matrix) == (2,length(xx))
+    @test R_matrix == ones(1,length(xx))
 end
 
 

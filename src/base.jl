@@ -1,8 +1,31 @@
 export linearLagrangePolynomials, compute1stDeriv4linearLagrangePolynomials, constantFunctions
 
+export constructBasisFunctionMatrixLinearLagrange, constructBasisFunctionMatrixConstantFuncs
+
 export GaussLegendreQuadRule
 
 import GaussQuadrature.legendre
+
+
+function constructBasisFunctionMatrixLinearLagrange(;interval::AbstractArray=[-1,1], evalPts::AbstractArray=[-1,1])
+    N0, N1 = linearLagrangePolynomials(interval=interval)
+    dN0, dN1 = compute1stDeriv4linearLagrangePolynomials(interval=interval)
+
+    N_matrix = [(N0.(evalPts))'; (N1.(evalPts))']
+    dN_matrix = [(dN0.(evalPts))'; (dN1.(evalPts))']
+
+    return (sparse(N_matrix), sparse(dN_matrix))
+end
+
+
+function constructBasisFunctionMatrixConstantFuncs(;evalPts::AbstractArray=[-1,1])
+    R = constantFunctions()
+    
+    R_matrix = Matrix((R.(evalPts))');
+
+    return sparse(R_matrix)
+end
+
 
 # linear Lagrange polynomial on an interval [x0,x1]
 function linearLagrangePolynomials(;interval::AbstractArray=[-1,1])
