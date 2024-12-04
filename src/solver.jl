@@ -1,7 +1,7 @@
 export directSolverLinearBar
 
 
-function directSolverLinearBar(;node_vector::AbstractArray, data_set::AbstractArray, costFunc_ele::Function, random_init_data::Bool=true, max_iter::Int=2000, tol::Float64=1e-10, num_ele::Int=2, numQuadPts::Int=2, costFunc_constant::Float64=1.0, bar_distF::Float64=1.0)
+function directSolverLinearBar(;node_vector::AbstractArray, data_set::AbstractArray, costFunc_ele::Function, random_init_data::Bool=true, max_iter::Int=2000, tol::Float64=1e-10, num_ele::Int=2, numQuadPts::Int=2, costFunc_constant::Float64=1.0, bar_distF::Float64=1.0, cross_section_area::Float64=1.0)
 
     ## initialize e_star and s_star
     numDataPts = size(data_set,1)
@@ -23,7 +23,7 @@ function directSolverLinearBar(;node_vector::AbstractArray, data_set::AbstractAr
     ndofs = [ndof_u, ndof_e, ndof_s, ndof_mu, ndof_lambda]
 
     # assembly system matrix
-    A = assembleLinearSystemMatrix(node_vector=node_vector, num_ele=num_ele, ndofs=ndofs, costFunc_constant=costFunc_constant)
+    A = assembleLinearSystemMatrix(node_vector=node_vector, num_ele=num_ele, ndofs=ndofs, costFunc_constant=costFunc_constant, cross_section_area=cross_section_area)
 
     # boundary conditions: fixed-free
     constrained_dofs = [1 (ndof_u+ndof_e+ndof_s+ndof_mu+1)]
@@ -44,7 +44,7 @@ function directSolverLinearBar(;node_vector::AbstractArray, data_set::AbstractAr
 
     while iter <= max_iter
         # assembly rhs
-        rhs = assembleRhsLinearBar(data_star=data_star, node_vector=node_vector, num_ele=num_ele, ndofs=ndofs, costFunc_constant=costFunc_constant, bar_distF=bar_distF)
+        rhs = assembleRhsLinearBar(data_star=data_star, node_vector=node_vector, num_ele=num_ele, ndofs=ndofs, costFunc_constant=costFunc_constant, bar_distF=bar_distF, cross_section_area=cross_section_area)
         rhs = rhs[ids]
 
         # solving
@@ -111,7 +111,7 @@ end
 
 
 
-function integrateCostfunction(;costFunc_ele::Function, local_state::AbstractArray, data_star::AbstractArray, node_vector::AbstractArray, num_ele::Int=2, numQuadPts::Int=2)
+function integrateCostfunction(;costFunc_ele::Function, local_state::AbstractArray, data_star::AbstractArray, node_vector::AbstractArray, num_ele::Int=2, numQuadPts::Int=2, cross_section_area::Float64=1.0)
 
     # quad points in default interval [-1,1]
     quad_pts, quad_weights = GaussLegendreQuadRule(numQuadPts=numQuadPts);
@@ -124,7 +124,7 @@ function integrateCostfunction(;costFunc_ele::Function, local_state::AbstractArr
         xi0, xi1 = node_vector[e:e+1]
         J4int = (xi1 - xi0) / 2
 
-        costFunc_global += costFunc_ele(local_state[e,1] - data_star[e,1], local_state[e,2] - data_star[e,2]) * sum(quad_weights) * J4int
+        costFunc_global += costFunc_ele(local_state[e,1] - data_star[e,1], local_state[e,2] - data_star[e,2]) * sum(quad_weights) * J4int * cross_section_area
     end
 
     return costFunc_global

@@ -1,7 +1,7 @@
 export assembleLinearSystemMatrix, assembleRhsLinearBar
 
 
-function assembleRhsLinearBar(;data_star::AbstractArray, node_vector::AbstractArray, num_ele::Int=2, numQuadPts::Int=2, ndofs::AbstractArray=ones(Int,5), costFunc_constant::Float64=1.0, bar_distF::Float64=1.0)
+function assembleRhsLinearBar(;data_star::AbstractArray, node_vector::AbstractArray, num_ele::Int=2, numQuadPts::Int=2, ndofs::AbstractArray=ones(Int,5), costFunc_constant::Float64=1.0, bar_distF::Float64=1.0, cross_section_area::Float64=1.0)
 
     # quad points in default interval [-1,1]
     quad_pts, quad_weights = GaussLegendreQuadRule(numQuadPts=numQuadPts);
@@ -29,9 +29,9 @@ function assembleRhsLinearBar(;data_star::AbstractArray, node_vector::AbstractAr
         J4int = (xi1 - xi0) / 2;   
        
         # integrated blocks of the rhs
-        rhs_b2[active_dofs_e] += ( R_matrix * (quad_weights .* J4int .* costFunc_constant .* (R_matrix' * data_star[active_dofs_e,1])) )[1]
+        rhs_b2[active_dofs_e] += ( R_matrix * (cross_section_area .* quad_weights .* J4int .* costFunc_constant .* (R_matrix' * data_star[active_dofs_e,1])) )[1]
         
-        rhs_b3[active_dofs_s] += ( R_matrix * (quad_weights .* J4int ./ costFunc_constant .* (R_matrix' * data_star[active_dofs_s,2])) )[1]
+        rhs_b3[active_dofs_s] += ( R_matrix * (cross_section_area .* quad_weights .* J4int ./ costFunc_constant .* (R_matrix' * data_star[active_dofs_s,2])) )[1]
     
         rhs_b5[active_dofs_lambda] += N_matrix * (quad_weights .* J4int .* bar_distF)
     end    
@@ -44,7 +44,7 @@ end
 
 
 
-function assembleLinearSystemMatrix(;node_vector::AbstractArray, num_ele::Int=2, numQuadPts::Int=2, ndofs::AbstractArray=ones(Int,5), costFunc_constant::Float64=1.0)
+function assembleLinearSystemMatrix(;node_vector::AbstractArray, num_ele::Int=2, numQuadPts::Int=2, ndofs::AbstractArray=ones(Int,5), costFunc_constant::Float64=1.0, cross_section_area::Float64=1.0)
 
     # quad points in default interval [-1,1]
     quad_pts, quad_weights = GaussLegendreQuadRule(numQuadPts=numQuadPts);
@@ -78,15 +78,15 @@ function assembleLinearSystemMatrix(;node_vector::AbstractArray, num_ele::Int=2,
         J4deriv = (xi1 - xi0) / 2;
 
         # integrated blocks of the system matrix        
-        J14[active_dofs_u,active_dofs_mu] += (dN_matrix ./ J4deriv) * (quad_weights .* J4int .* R_matrix')
+        J14[active_dofs_u,active_dofs_mu] += (dN_matrix ./ J4deriv) * (cross_section_area .* quad_weights .* J4int .* R_matrix')
         
-        J22[active_dofs_e,active_dofs_e] += (R_matrix * ( quad_weights .* J4int .* costFunc_constant .* R_matrix' ))[1]
+        J22[active_dofs_e,active_dofs_e] += (R_matrix * ( cross_section_area .* quad_weights .* J4int .* costFunc_constant .* R_matrix' ))[1]
 
-        J24[active_dofs_e,active_dofs_mu] += -(R_matrix * ( quad_weights .* J4int .* R_matrix' ))[1]
+        J24[active_dofs_e,active_dofs_mu] += -(R_matrix * ( cross_section_area .* quad_weights .* J4int .* R_matrix' ))[1]
 
-        J33[active_dofs_s,active_dofs_s] += (R_matrix * ( quad_weights .* J4int ./ costFunc_constant .* R_matrix' ))[1]
+        J33[active_dofs_s,active_dofs_s] += (R_matrix * ( cross_section_area .* quad_weights .* J4int ./ costFunc_constant .* R_matrix' ))[1]
 
-        J35[active_dofs_s,active_dofs_lambda] += (R_matrix * (quad_weights .* J4int .* (dN_matrix ./ J4deriv)'))[:]
+        J35[active_dofs_s,active_dofs_lambda] += (R_matrix * (cross_section_area .* quad_weights .* J4int .* (dN_matrix ./ J4deriv)'))[:]
     end
 
 
