@@ -62,7 +62,7 @@ function directSolverLinearBar(;node_vector::AbstractArray, data_set::AbstractAr
         data_star_new = assignLocalState(data_set=data_set, local_state=[ebar sbar], costFunc_ele=costFunc_ele)
 
         # evaluate global cost function (discrete)
-        push!(costFunc_global, integrateCostfunction(costFunc_ele=costFunc_ele, local_state=[ebar sbar], data_star=data_star, node_vector=node_vector, num_ele=num_ele, numQuadPts=numQuadPts))
+        push!(costFunc_global, integrateCostfunction(costFunc_ele=costFunc_ele, local_state=[ebar sbar], data_star=data_star, node_vector=node_vector, num_ele=num_ele, numQuadPts=numQuadPts, cross_section_area=cross_section_area))
 
         ## test convergence
         data_diff = data_star - data_star_new
