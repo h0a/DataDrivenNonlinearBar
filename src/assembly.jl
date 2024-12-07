@@ -156,7 +156,7 @@ function assembleBalanceResidual(;x::AbstractArray, data_star::AbstractArray, no
     
         # integrated blocks of the rhs
         rhs_b1[active_dofs_u] += - (dN_matrix ./ J4deriv) * (cross_section_area .* quad_weights .* J4int .* (sh .* dlambdah)) - 
-                                   (dN_matrix ./ J4deriv) * (cross_section_area .* quad_weights .* ((1 .+ duh) .* muh))
+                                   (dN_matrix ./ J4deriv) * (cross_section_area .* quad_weights .* J4int .* ((1 .+ duh) .* muh))
         
         rhs_b2[active_dofs_e] += ( R_matrix * (cross_section_area .* quad_weights .* J4int .* muh) - 
                                    R_matrix * (cross_section_area .* quad_weights .* J4int .* costFunc_constant .* (R_matrix' * e_diff[active_dofs_e])) )[1]
@@ -232,13 +232,13 @@ function assembleLinearizedSystemMatrix(;x::AbstractArray, node_vector::Abstract
         dlambdah = (dN_matrix ./ J4deriv)' * lambdahat[active_dofs_lambda]
 
         # integrated blocks of the system matrix
-        J11[active_dofs_u,active_dofs_u] += (dN_matrix ./ J4deriv) * (cross_section_area .* quad_weights .* J4int .* muh .* dN_matrix')
+        J11[active_dofs_u,active_dofs_u] += (dN_matrix ./ J4deriv) * (cross_section_area .* quad_weights .* J4int .* muh .* (dN_matrix ./ J4deriv)')
         
         J13[active_dofs_u,active_dofs_s] += (dN_matrix ./ J4deriv) * (cross_section_area .* quad_weights .* J4int .* dlambdah .* R_matrix')
         
         J14[active_dofs_u,active_dofs_mu] += (dN_matrix ./ J4deriv) * (cross_section_area .* quad_weights .* J4int .* ((1 .+ duh) .* R_matrix'))
         
-        J15[active_dofs_u,active_dofs_lambda] += (dN_matrix ./ J4deriv) * (cross_section_area .* quad_weights .* J4int .* sh .* dN_matrix')
+        J15[active_dofs_u,active_dofs_lambda] += (dN_matrix ./ J4deriv) * (cross_section_area .* quad_weights .* J4int .* sh .* (dN_matrix ./ J4deriv)')
         
         J22[active_dofs_e,active_dofs_e] += ( R_matrix * (cross_section_area .* quad_weights .* J4int .* costFunc_constant .* R_matrix') )[1]
 
