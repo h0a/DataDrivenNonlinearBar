@@ -2,7 +2,8 @@ using Test
 
 tests = [
             "base",
-            "assembly"
+            "assembly",
+            "newtonraphsonstep"
         ]
 
 @testset "DataDrivenNonlinearBar Unit-testing" begin
