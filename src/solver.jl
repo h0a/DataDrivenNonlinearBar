@@ -1,4 +1,114 @@
-export directSolverLinearBar
+export directSolverLinearBar, directSolverNonLinearBar
+
+
+function directSolverNonLinearBar(;node_vector::AbstractArray, data_set::AbstractArray, costFunc_ele::Function, random_init_data::Bool=true, DD_max_iter::Int=2000, DD_tol::Float64=1e-10, num_ele::Int=2, numQuadPts::Int=2, costFunc_constant::Float64=1.0, bar_distF::Float64=1.0, cross_section_area::Float64=1.0, NR_num_load_step::Int=50, NR_tol::Float64=1e-10, NR_max_iter::Int=50)
+
+    ## initialize e_star and s_star
+    numDataPts = size(data_set,1)
+
+    if random_init_data
+        init_data_id = rand(1:numDataPts,num_ele)
+        init_data = data_set[init_data_id,:]
+    end
+
+    data_star = deepcopy(init_data)
+
+    ## Newton_Raphson scheme combined in the direct solver [Kirchdoerfer - 2016 - Data-driven computational mechanics]
+    # ndofs
+    num_node = length(node_vector)
+    ndof_u = ndof_lambda = num_node
+    ndof_e = ndof_s = ndof_mu = num_ele
+
+    ndof_tot = ndof_u + ndof_e + ndof_s + ndof_mu + ndof_lambda
+    ndofs = [ndof_u, ndof_e, ndof_s, ndof_mu, ndof_lambda]
+
+    # boundary conditions: fixed-free
+    constrained_dofs = [1 (ndof_u+ndof_e+ndof_s+ndof_mu+1)]
+
+    # allocation solution vector
+    x = spzeros(ndof_tot)
+    costFunc_global = []
+
+    # iterative data-driven direct solver
+    dd_iter = 0
+
+    while dd_iter <= DD_max_iter
+
+        # newton-raphson scheme
+        x = spzeros(ndof_tot)        # initial guess for NR scheme
+    
+        for cc_load = 1:NR_num_load_step
+            iter = 0
+            alpha = cc_load / NR_num_load_step
+    
+            while iter <= NR_max_iter
+                iter += 1;        
+    
+                Delta_x = NewtonRaphsonStep(previous_sol=x, data_star=data_star, node_vector=node_vector, num_ele=num_ele, numQuadPts=numQuadPts, ndofs=ndofs, costFunc_constant=costFunc_constant, bar_distF=bar_distF * alpha, cross_section_area=cross_section_area, constrained_dofs=constrained_dofs)      
+    
+                # recover full dimension
+                Delta_x = [0; Delta_x]
+                Delta_x = [Delta_x[1:ndof_u + ndof_e + ndof_s + ndof_mu];0;Delta_x[ndof_u + ndof_e + ndof_s + ndof_mu+1:end]]
+    
+                # update solution
+                x += Delta_x        
+    
+                # check convergence
+                if norm(Delta_x) <= NR_tol
+                    break;
+                end
+    
+                if iter == NR_max_iter
+                    break;
+                end
+            end
+            # @show iter
+    
+            if iter == NR_max_iter
+                print("NR did not converge at load step ")
+                @show cc_load
+                break;
+            end
+        end
+    
+    
+        # collect computed ebar and sbar
+        ebar = x[ndof_u+1:ndof_u+ndof_e]
+        sbar = x[ndof_u+ndof_e+1:ndof_u+ndof_e+ndof_s]
+    
+    
+        ## local state assignment
+        data_star_new = assignLocalState(data_set=data_set, local_state=[ebar sbar], costFunc_ele=costFunc_ele)
+    
+    
+        # evaluate global cost function (discrete)
+        push!(costFunc_global, integrateCostfunction(costFunc_ele=costFunc_ele, local_state=[ebar sbar], data_star=data_star, node_vector=node_vector, num_ele=num_ele, numQuadPts=numQuadPts, cross_section_area=cross_section_area))
+    
+    
+        ## test convergence
+        data_diff = data_star - data_star_new
+        err = [ norm(data_diff[i,:]) for i in 1:num_ele ]
+        max_err = maximum(err)
+    
+        dd_iter += 1
+    
+        if max_err <= DD_tol
+            @show dd_iter
+            break
+        end
+    
+    
+        # overwrite local state
+        data_star = deepcopy(data_star_new)
+    end
+    
+    
+    # collect solution fields
+    uhat, ebar, sbar = x[1:ndof_u], x[ndof_u+1:ndof_u+ndof_e], x[ndof_u+ndof_e+1:ndof_u+ndof_e+ndof_s]
+
+    return uhat, ebar, sbar, costFunc_global
+end
+
 
 
 function directSolverLinearBar(;node_vector::AbstractArray, data_set::AbstractArray, costFunc_ele::Function, random_init_data::Bool=true, max_iter::Int=2000, tol::Float64=1e-10, num_ele::Int=2, numQuadPts::Int=2, costFunc_constant::Float64=1.0, bar_distF::Float64=1.0, cross_section_area::Float64=1.0)
